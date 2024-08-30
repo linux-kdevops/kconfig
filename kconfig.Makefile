@@ -33,7 +33,6 @@ include/config/project.release: $(CURDIR)/Makefile
 export PROJECT PROJECTVERSION PROJECTRELEASE
 
 $(KCONFIG_DIR)/mconf:
-	$(MAKE) -C $(KCONFIG_DIR)/ .mconf-cfg
 	$(MAKE) -C $(KCONFIG_DIR)/ mconf
 
 PHONY += menuconfig
@@ -41,7 +40,6 @@ menuconfig: $(KCONFIG_DIR)/mconf include/config/project.release Kconfig
 	@$< Kconfig
 
 $(KCONFIG_DIR)/nconf:
-	$(MAKE) -C $(KCONFIG_DIR)/ .nconf-cfg
 	$(MAKE) -C $(KCONFIG_DIR)/ nconf
 
 PHONY += nconfig
