@@ -12,18 +12,18 @@ CFLAGS += -I ./
 lxdialog        := $(addprefix lxdialog/, \
 		checklist.o inputbox.o menubox.o textbox.o util.o yesno.o)
 
-default: conf mconf nconf
+kconfig: conf mconf nconf
 
-common-objs     := confdata.o expr.o lexer.lex.o menu.o parser.tab.o \
+common-objs     := lexer.lex.o parser.tab.o confdata.o expr.o menu.o \
 		   preprocess.o symbol.o util.o
 
-lexer.lex.c: lexer.l
+lexer.lex.c: lexer.l parser.tab.h
 	@flex -olexer.lex.c -L lexer.l
 
-parser.tab.c: parser.y
+parser.tab.c parser.tab.h: parser.y
 	@bison -oparser.tab.c --defines=parser.tab.h -t -l parser.y
 
-conf: conf.o $(common-objs)
+conf: $(common-objs) conf.o
 	$(CC) -o conf -I./ $^
 
 HOSTLDLIBS_nconf       = $(call read-file, nconf-libs)
@@ -43,20 +43,21 @@ cmd_conf_cfg = $(CURDIR)/$< $(addprefix $*conf-, cflags libs bin); touch $*conf-
 %conf-cflags %conf-libs %conf-bin: %conf-cfg.sh
 	$(call cmd,conf_cfg)
 
-MCONF_DEPS := mconf.o $(lxdialog) mnconf-common.o $(common-objs)
+MCONF_DEPS := $(common-objs) mconf.o $(lxdialog) mnconf-common.o
 mconf:   | mconf-libs
 mconf.o: | mconf-cflags
-mconf: conf $(MCONF_DEPS)
+mconf: $(MCONF_DEPS) conf
 	$(CC) -o mconf -I./ $(MCONF_DEPS) $(HOSTLDLIBS_mconf)
 
-NCONF_DEPS := nconf.o nconf.gui.o mnconf-common.o $(common-objs)
+NCONF_DEPS := $(common-objs) nconf.o nconf.gui.o mnconf-common.o
 nconf:   | nconf-libs
 nconf.o: | nconf-cflags
-nconf: conf $(NCONF_DEPS)
+nconf: $(NCONF_DEPS) conf
 	$(CC) -o nconf $(NCONF_DEPS) $(HOSTLDLIBS_nconf)
 
 clean-files := conf mconf conf
-clean-files += *.o lxdialog/*.o parser.tab.c *.lex.c
+clean-files += *.o lxdialog/*.o
+clean-files += parser.tab.c parser.tab.h .lex.c
 clean-files += *conf-cflags *conf-libs *conf-bin
 
 .PHONY: help
